@@ -1,0 +1,44 @@
+<body>
+<!--script src='synth.js'></script>
+<script type='module' src='ui3test.js'></script-->
+    <head>
+
+           <script type="importmap">
+            {
+                "imports": {
+                    "three": "https://unpkg.com/three@0.156.0/build/three.module.js",
+                    "three/addons/": "https://unpkg.com/three@0.156.0/examples/jsm/",
+                    "three-mesh-bvh": "https://unpkg.com/three-mesh-bvh@0.6.8/build/index.module.js"
+                }
+            }
+        </script>
+        
+    </head>
+<script type='module'>
+import App3 from "./App3.js"
+let app = App3.getApp()
+let THREE = App3.THREE
+import FishSwarm from "./FishSwarm.js"
+import FishTank from "./FishTank.js"
+
+
+            let sun = new THREE.DirectionalLight('white',1.9);
+            sun.position.set(0, 50, 0)
+            sun.shadow.mapSize.set(1024,1024)
+            sun.shadow.camera.right = sun.shadow.camera.top = 100
+            sun.shadow.camera.bottom = sun.shadow.camera.left = -100
+            sun.shadow.camera.far = 100;
+            sun.shadow.camera.updateProjectionMatrix()
+            app.scene.add(sun)
+            //app.scene.add(new THREE.DirectionalLightHelper(sun,sun.shadow.camera.right))
+
+            let ambient = new THREE.AmbientLight('white',.2);
+            app.scene.add(ambient)
+
+            app.THREE=THREE;
+            app.App3 = App3;
+            app.assetRoot = ''
+let fs = new FishSwarm(app);
+let ft = new FishTank(app);
+</script>
+</body>
