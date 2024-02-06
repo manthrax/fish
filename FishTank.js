@@ -1,8 +1,4 @@
 
-//import App3 from "./App3.js"
-//let app = App3.getApp()
-//let THREE = App3.THREE
-
 import CausticShader from "./CausticShader.js"
 
 class FishTank{
@@ -22,7 +18,7 @@ class FishTank{
             m.scale.multiplyScalar(10)
            // m.position.y-= 10;
           //  m.material.color.set('#101020')
-                        m.material.color.set('#ff9080')
+            m.material.color.set('#ff9080')          /// Sand color
             m.receiveShadow = true
             let visMesh = this.visMesh = new THREE.Mesh(new THREE.PlaneGeometry(500,500,100,100),new THREE.MeshStandardMaterial({
                 side:THREE.DoubleSide,
@@ -37,7 +33,7 @@ class FishTank{
             visMesh.position.y+=50;
             visMesh.rotation.x = -Math.PI*.5
 
-new THREE.TextureLoader().load(`assets/50876891527_c36caa58aa_f.jpg`,(tex)=>{
+new THREE.TextureLoader().load(`assets/background.jpg`,(tex)=>{
   //app.renderer.environment = tex;
   app.scene.background = tex;
   //tex.encoding = THREE.sRGBEncoding;

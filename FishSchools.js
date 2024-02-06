@@ -1,29 +1,23 @@
-
 let DEBUG_SCHOOL = false
-
-//import App3 from "./App3.js"
-//let app = App3.getApp()
-//let THREE = App3.THREE
-
 
 let rnd = (rng=1.)=>Math.random() * rng
 let srnd = (rng=1)=>(Math.random() - .5) * rng * 2
 let arnd = (a)=>a[(Math.random() * a.length) | 0]
 let swarmList = [];
-//new Swarm();
+
 let swarmMap = {}
 
 let cohesion = .01;
 
-let rndmm = (min,max)=>(Math.random() *(max-min))+min;
+let rndmm = (min,max)=>(Math.random() * (max - min)) + min;
 
 import FishParams from "./FishParams.js"
 
 class FishSchool {
 
     constructor(app) {
-        let {THREE,App3}=app;
-        let spawnCenter = this.spawnCenter = new THREE.Vector3(srnd(FishParams.swarmSpawnRadius),rndmm(FishParams.oceanSurfaceY-FishParams.swarmHeight,FishParams.oceanFloorY) + 5,srnd(FishParams.swarmSpawnRadius))
+        let {THREE, App3} = app;
+        let spawnCenter = this.spawnCenter = new THREE.Vector3(srnd(FishParams.swarmSpawnRadius),rndmm(FishParams.oceanSurfaceY - FishParams.swarmHeight, FishParams.oceanFloorY) + 5,srnd(FishParams.swarmSpawnRadius))
         let averageCenter = this.averageCenter = new THREE.Vector3()
         let sumCenter = new THREE.Vector3()
         let averageVel = this.averageVel = new THREE.Vector3()
@@ -50,27 +44,19 @@ class FishSchool {
             averageCenter.copy(sumCenter).multiplyScalar(irat)
             averageVel.copy(sumVel).multiplyScalar(irat).normalize()
 
-            //            averageCenter.set(0,20,0)
-/*
-            if (rnd() < .01) {
-                moveVel.set(srnd(1), srnd(.5), srnd(1))
-                if (moveVel.dot(averageCenter) > 0)
-                    moveVel.multiplyScalar(-1);
-            }
-            averageCenter.add(moveVel)
-*/
-
-//Prevent swarms from moving too far away
-let safeZone = 50
-let ty = averageCenter.y
-averageCenter.y=0;
-let len = averageCenter.length()
-if(len>safeZone)averageCenter.multiplyScalar(safeZone/len)
-if(ty<FishParams.oceanFloorY) ty+=5;
-if(ty>FishParams.oceanSurfaceY) ty-=5;
-averageCenter.y=ty;
-//-----------------------
-
+            //Prevent swarms from moving too far away
+            let safeZone = 50
+            let ty = averageCenter.y
+            averageCenter.y = 0;
+            let len = averageCenter.length()
+            if (len > safeZone)
+                averageCenter.multiplyScalar(safeZone / len)
+            if (ty < FishParams.oceanFloorY)
+                ty += 5;
+            if (ty > FishParams.oceanSurfaceY)
+                ty -= 5;
+            averageCenter.y = ty;
+            //-----------------------
 
             mk.lookAt(tv0.copy(averageCenter).add(averageVel));
 
@@ -94,7 +80,6 @@ averageCenter.y=ty;
 class FishSchools {
 
 }
-;
 FishSchools.beginUpdate = (time)=>{
     swarmList.forEach(e=>e.beginUpdate())
 }

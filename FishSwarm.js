@@ -1,10 +1,6 @@
-//import App3 from "./App3.js"
-//let app = App3.getApp()
-//let THREE = App3.THREE
 
 import CausticShader from "./CausticShader.js"
 import FishShader from "./FishShader.js"
-//import FishTank from "./FishTank.js"
 import FishSchools from "./FishSchools.js"
 import FishParams from "./FishParams.js"
 

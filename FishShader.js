@@ -1,6 +1,3 @@
-//import App3 from "./App3.js"
-//let app = App3.getApp()
-//let THREE = App3.THREE
 
 import CausticShader from "./CausticShader.js"
 
