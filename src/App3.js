@@ -42,7 +42,7 @@ export default class App3 {
         controls.target.y = camera.position.y = 25
         let checkResize = ()=>{
             if ((c.width != window.innerWidth) || (c.height !== window.innerHeight)) {
-                renderer.setSize(window.innerWidth, window.innerHeight, false)
+                renderer.setSize(window.innerWidth|0, window.innerHeight|0, false)
                 camera.aspect = window.innerWidth / window.innerHeight;
                 camera.updateProjectionMatrix();
             }
