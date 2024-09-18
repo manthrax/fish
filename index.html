@@ -5,8 +5,8 @@
         <script type="importmap">
             {
                 "imports": {
-                    "three": "https://unpkg.com/three@0.156.0/build/three.module.js",
-                    "three/addons/": "https://unpkg.com/three@0.156.0/examples/jsm/",
+                    "three": "https://threejs.org/build/three.module.js",
+                    "three/addons/": "https://threejs.org/examples/jsm/",
                     "three-mesh-bvh": "https://unpkg.com/three-mesh-bvh@0.6.8/build/index.module.js"
                 }
             }</script>
@@ -31,6 +31,10 @@
         let ambient = new THREE.AmbientLight('white',.2);
         app.scene.add(ambient)
 
+
+let headLamp = new THREE.PointLight('white',10.);
+        app.camera.add(headLamp)
+        
         app.THREE = THREE;
         app.App3 = App3;
         app.assetRoot = ''
