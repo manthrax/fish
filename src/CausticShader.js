@@ -1,41 +1,41 @@
-import*as THREE from "three"
+import *as THREE from "three"
 
 class CausticShader extends THREE.ShaderMaterial {
     constructor() {
-        super({vertexShader:CausticShader.vertex,fragmentShader: CausticShader.header + CausticShader.fragment,uniforms:{iTime:{value:performance.now()/1000.}}})
-        let causticMesh = new THREE.Mesh(new THREE.BoxGeometry(2,2,2),this)
-        causticMesh.position.z-=10;
+        super({ vertexShader: CausticShader.vertex, fragmentShader: CausticShader.header + CausticShader.fragment, uniforms: { iTime: { value: performance.now() / 1000. } } })
+        let causticMesh = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2), this)
+        causticMesh.position.z -= 10;
         const rtScene = new THREE.Scene();
         rtScene.background = new THREE.Color('red');
         rtScene.add(causticMesh)
         let rtCam = new THREE.OrthographicCamera()
         rtScene.add(rtCam)
         const rtSize = 512;
-        const renderTarget = new THREE.WebGLRenderTarget(rtSize,rtSize);
-        
+        const renderTarget = new THREE.WebGLRenderTarget(rtSize, rtSize);
+
 
         CausticShader.texture = this.texture = renderTarget.texture;
         this.texture.wrapS = this.texture.wrapT = THREE.RepeatWrapping;
 
 
-        this.update=(renderer,time)=>{
+        this.update = (renderer, time) => {
             this.uniforms.iTime.value = time;
             let saveTarg = renderer.getRenderTarget()
 
-        //let saveEncoding = renderer.outputEncoding;
-       // renderer.outputEncoding=THREE.LinearEncoding
+            //let saveEncoding = renderer.outputEncoding;
+            // renderer.outputEncoding=THREE.LinearEncoding
 
             renderer.setRenderTarget(renderTarget)
-            renderer.render(rtScene,rtCam)
-            renderer.setRenderTarget(saveTarg)            
-        
-       // renderer.outputEncoding=saveEncoding
+            renderer.render(rtScene, rtCam)
+            renderer.setRenderTarget(saveTarg)
+
+            // renderer.outputEncoding=saveEncoding
 
         }
     }
 }
 
-CausticShader.vertex=`
+CausticShader.vertex = `
 varying vec2 vUv;
 void main(){
     vUv = uv;
@@ -43,12 +43,12 @@ void main(){
 }            
 `
 
-CausticShader.fragment=`
+CausticShader.fragment = `
 void main(){
     mainImage(gl_FragColor,vUv); 
 }
 `
-CausticShader.header=`
+CausticShader.header = `
 // Made by k-mouse (2016-11-23)
 // Modified from David Hoskins (2013-07-07) and joltz0r (2013-07-04)
 varying vec2 vUv;
@@ -62,7 +62,7 @@ vec2 iResolution = vec2(1.);
 
 float waterHighlight(vec2 p, float time, float foaminess)
 {
-    vec2 i = vec2(p);
+    vec2 i = vec2(p*3.);
     float c = 0.0;
     float foaminess_factor = mix(1.0, 6.0, foaminess);
     float inten = .005 * foaminess_factor;
@@ -82,7 +82,7 @@ float waterHighlight(vec2 p, float time, float foaminess)
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord ) 
 {
-    float time = iTime * 0.63+123.0;
+    float time = (iTime * 1.63)+123.0;
     vec2 uv = fragCoord.xy / iResolution.xy;
     vec2 uv_square = vec2(uv.x * iResolution.x / iResolution.y, uv.y);
     float dist_center = pow(2.0*length(uv - 0.5), 2.0);

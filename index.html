@@ -1,6 +1,7 @@
 <body>
     <!--script src='synth.js'></script>
 <script type='module' src='ui3test.js'></script-->
+
     <head>
         <script type="importmap">
             {
@@ -18,7 +19,7 @@
         import FishSwarm from "./src/FishSwarm.js"
         import FishTank from "./src/FishTank.js"
 
-        let sun = new THREE.DirectionalLight('white',1.9);
+        let sun = new THREE.DirectionalLight('white', 2.9);
         sun.position.set(0, 50, 0)
         sun.shadow.mapSize.set(1024, 1024)
         sun.shadow.camera.right = sun.shadow.camera.top = 100
@@ -28,13 +29,13 @@
         app.scene.add(sun)
         //app.scene.add(new THREE.DirectionalLightHelper(sun,sun.shadow.camera.right))
 
-        let ambient = new THREE.AmbientLight('white',.2);
+        let ambient = new THREE.AmbientLight('white', .35);
         app.scene.add(ambient)
 
 
-let headLamp = new THREE.PointLight('white',10.);
-        app.camera.add(headLamp)
-        
+        //let headLamp = new THREE.PointLight('white', 10.);
+        //app.camera.add(headLamp)
+
         app.THREE = THREE;
         app.App3 = App3;
         app.assetRoot = ''

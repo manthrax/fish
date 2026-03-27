@@ -6,7 +6,7 @@ let HUE_SHIFT = true;
 
 class FishShader {
     constructor(app) {
-        let {THREE, App3} = app;
+        let { THREE, App3 } = app;
         FishShader.causticUniform = {
             value: null // caustics.texture
         }
@@ -15,12 +15,12 @@ class FishShader {
             value: performance.now()
         }
         FishShader.paramUniform = {
-            value: new THREE.Vector4(4.,.006,.03)//freq,rate,mag
+            value: new THREE.Vector4(4., .006, .03)//freq,rate,mag
         }
 
         let caustics = new CausticShader()
 
-        FishShader.update = (time)=>{
+        FishShader.update = (time) => {
             FishShader.timeUniform.value = time
 
             caustics.update(app.renderer, time * .001)
@@ -29,9 +29,9 @@ class FishShader {
 
         FishShader.causticUniform.value = caustics.texture;
 
-        FishShader.makeFishMaterial = (material)=>{
+        FishShader.makeFishMaterial = (material) => {
 
-            material.onBeforeCompile = function(mat, renderer) {
+            material.onBeforeCompile = function (mat, renderer) {
                 mat.vertexShader = mat.vertexShader.replace("#include <common>", `
 #include <common>
 uniform float time;
@@ -93,9 +93,10 @@ vec3 hueShift(vec3 color, float hue) {
                     mat.fragmentShader = mat.fragmentShader.replace("#include <map_fragment>", `
 #include <map_fragment>
 //vUv
-vec4 caustic = texture2D(tCaustic,(uProjectionMatrix * vWorldPosition).xy*.3);
+vec4 caustic = texture2D(tCaustic,(uProjectionMatrix * vWorldPosition).xy*.1);
 
-diffuseColor.rgb = diffuseColor.rgb+((caustic.rgb-.5)*.5);
+diffuseColor.rgb = min(diffuseColor.rgb,caustic.rgb);
+//diffuseColor.rgb = diffuseColor.rgb+((caustic.rgb-.5)*.5);
 
 
 

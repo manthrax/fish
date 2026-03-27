@@ -27,7 +27,7 @@ export default class App3 {
         c.style.left = '0px'
         c.style.top = '0px'
         document.body.appendChild(c)
-        let camera = this.camera = new THREE.PerspectiveCamera(25)
+        let camera = this.camera = new THREE.PerspectiveCamera(70)
         let scene = this.scene = new THREE.Scene();
         let controls = this.controls = new OrbitControls(camera,c);
         controls.enableDamping = true
