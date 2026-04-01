@@ -1,23 +1,23 @@
 let DEBUG_SCHOOL = false
 
-let rnd = (rng=1.)=>Math.random() * rng
-let srnd = (rng=1)=>(Math.random() - .5) * rng * 2
-let arnd = (a)=>a[(Math.random() * a.length) | 0]
+let rnd = (rng = 1.) => Math.random() * rng
+let srnd = (rng = 1) => (Math.random() - .5) * rng * 2
+let arnd = (a) => a[(Math.random() * a.length) | 0]
 let swarmList = [];
 
 let swarmMap = {}
 
 let cohesion = .01;
 
-let rndmm = (min,max)=>(Math.random() * (max - min)) + min;
+let rndmm = (min, max) => (Math.random() * (max - min)) + min;
 
 import FishParams from "./FishParams.js"
 
 class FishSchool {
 
     constructor(app) {
-        let {THREE, App3} = app;
-        let spawnCenter = this.spawnCenter = new THREE.Vector3(srnd(FishParams.swarmSpawnRadius),rndmm(FishParams.oceanSurfaceY - FishParams.swarmHeight, FishParams.oceanFloorY) + 5,srnd(FishParams.swarmSpawnRadius))
+        let { THREE, App3 } = app;
+        let spawnCenter = this.spawnCenter = new THREE.Vector3(srnd(FishParams.swarmSpawnRadius), rndmm(FishParams.oceanSurfaceY - FishParams.swarmHeight, FishParams.oceanFloorY) + 5, srnd(FishParams.swarmSpawnRadius))
         let averageCenter = this.averageCenter = new THREE.Vector3()
         let sumCenter = new THREE.Vector3()
         let averageVel = this.averageVel = new THREE.Vector3()
@@ -28,16 +28,16 @@ class FishSchool {
         let tv0 = new THREE.Vector3()
         let tv1 = new THREE.Vector3()
 
-        let mk = new THREE.Mesh(new THREE.BoxGeometry(.2,.2,4.))
-        mk.castShadow = mk.receiveShadow = true;
+        let mk = new THREE.AxesHelper();//Mesh(new THREE.BoxGeometry(.2, .2, 4.))
+        //mk.castShadow = mk.receiveShadow = true;
         let count = 0;
         DEBUG_SCHOOL && app.scene.add(mk)
-        this.beginUpdate = ()=>{
+        this.beginUpdate = () => {
             this.recompute();
             sumWeight = count = 0;
             sumCenter.copy(sumVel.set(0, 0, 0))
         }
-        this.recompute = ()=>{
+        this.recompute = () => {
             if (!count)
                 return;
             let irat = 1 / sumWeight
@@ -50,7 +50,7 @@ class FishSchool {
             averageCenter.y = 0;
             let len = averageCenter.length()
             if (len > safeZone)
-                averageCenter.multiplyScalar(safeZone / len)
+                averageCenter.multiplyScalar(safeZone * .5 / len)
             if (ty < FishParams.oceanFloorY)
                 ty += 5;
             if (ty > FishParams.oceanSurfaceY)
@@ -63,7 +63,7 @@ class FishSchool {
             mk.position.copy(averageCenter)
 
         }
-        this.update = (f)=>{
+        this.update = (f) => {
             count++;
             let state = f.userData.state
             let weight = state.size
@@ -80,10 +80,10 @@ class FishSchool {
 class FishSchools {
 
 }
-FishSchools.beginUpdate = (time)=>{
-    swarmList.forEach(e=>e.beginUpdate())
+FishSchools.beginUpdate = (time) => {
+    swarmList.forEach(e => e.beginUpdate())
 }
-FishSchools.getSchool = (id,app)=>{
+FishSchools.getSchool = (id, app) => {
     let s = swarmMap[id]
     if (!s)
         swarmList.push(s = swarmMap[id] = new FishSchool(app));

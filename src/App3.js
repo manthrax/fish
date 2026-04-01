@@ -1,7 +1,7 @@
-import*as THREE from "three"
-import {OrbitControls} from "three/addons/controls/OrbitControls.js"
-import {DRACOLoader} from "three/addons/loaders/DRACOLoader.js"
-import {GLTFLoader} from "three/addons/loaders/GLTFLoader.js"
+import *as THREE from "three"
+import { OrbitControls } from "three/addons/controls/OrbitControls.js"
+import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js"
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js"
 
 export default class App3 {
     constructor() {
@@ -10,7 +10,7 @@ export default class App3 {
         });
 
         renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.shadowMap.type = THREE.PCFShadowMap;
 
         var gl = renderer.getContext();
         var debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
@@ -29,7 +29,7 @@ export default class App3 {
         document.body.appendChild(c)
         let camera = this.camera = new THREE.PerspectiveCamera(70)
         let scene = this.scene = new THREE.Scene();
-        let controls = this.controls = new OrbitControls(camera,c);
+        let controls = this.controls = new OrbitControls(camera, c);
         controls.enableDamping = true
         controls.dampingFactor = .33
 
@@ -40,9 +40,9 @@ export default class App3 {
         scene.add(camera)
 
         controls.target.y = camera.position.y = 25
-        let checkResize = ()=>{
+        let checkResize = () => {
             if ((c.width != window.innerWidth) || (c.height !== window.innerHeight)) {
-                renderer.setSize(window.innerWidth|0, window.innerHeight|0, false)
+                renderer.setSize(window.innerWidth | 0, window.innerHeight | 0, false)
                 camera.aspect = window.innerWidth / window.innerHeight;
                 camera.updateProjectionMatrix();
             }
@@ -51,7 +51,7 @@ export default class App3 {
         let lastTime = performance.now();
         checkResize();
         renderer.render(scene, camera)
-        this.renderLoop = (time)=>{
+        this.renderLoop = (time) => {
             checkResize();
             frameEvt.time = time;
             frameEvt.deltaT = time - lastTime;
@@ -61,10 +61,10 @@ export default class App3 {
             renderer.render(scene, camera)
         }
 
-        this.startRendering = ()=>renderer.setAnimationLoop(this.renderLoop);
-        this.removeEventListener = (evt,fn)=>document.removeEventListener(evt, fn)
-        this.addEventListener = (evt,fn)=>document.addEventListener(evt, fn)
-        this.dispatchEvent = (evt)=>document.dispatchEvent(evt)
+        this.startRendering = () => renderer.setAnimationLoop(this.renderLoop);
+        this.removeEventListener = (evt, fn) => document.removeEventListener(evt, fn)
+        this.addEventListener = (evt, fn) => document.addEventListener(evt, fn)
+        this.dispatchEvent = (evt) => document.dispatchEvent(evt)
 
         this.interaction = new Interaction3(this)
     }
@@ -76,22 +76,22 @@ App3.glbLoader = new GLTFLoader()
 const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath('https://threejs.org/examples/jsm/libs/draco/');
 App3.glbLoader.setDRACOLoader(dracoLoader);
-App3.getApp = ()=>{
+App3.getApp = () => {
     return App3.app || (App3.app = new App3())
 }
 
 let loadPhase = 0;
 
-App3.startLoadPhase = (count=1)=>{
+App3.startLoadPhase = (count = 1) => {
     loadPhase += count
 }
-App3.loadPhaseComplete = (count=1)=>{
+App3.loadPhaseComplete = (count = 1) => {
     loadPhase -= count;
     if (loadPhase == 0) {
         let app = App3.getApp()
         let fadeEvt = new Event('fadeIn')
         app.dispatchEvent(fadeEvt)
-        let m = App3.fadePlane = new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({
+        let m = App3.fadePlane = new THREE.Mesh(new THREE.PlaneGeometry(3, 3), new THREE.MeshBasicMaterial({
             color: 'black',
             side: THREE.DoubleSide,
             transparent: true,
@@ -101,7 +101,7 @@ App3.loadPhaseComplete = (count=1)=>{
         m.position.z = app.camera.near * -1.1
         app.camera.add(m)
         let fadeRate = .001
-        let fev = (e)=>{
+        let fev = (e) => {
             m.material.opacity -= fadeRate;
             fadeRate *= 1.03
             if (m.material.opacity <= 0) {
@@ -120,7 +120,7 @@ App3.loadPhaseComplete = (count=1)=>{
 
 class Interaction3 {
     constructor(app) {
-        let {scene, camera} = app;
+        let { scene, camera } = app;
         let dragStart = new THREE.Vector2();
         let dragEnd = new THREE.Vector2();
         let moveEvent = new Event('canvasMouseMove')
@@ -130,7 +130,7 @@ class Interaction3 {
         let iroot = document;
         let el1, el2;
 
-        let fireMove = (evt)=>{
+        let fireMove = (evt) => {
             if (evt.buttons)
                 return false;
             moveEvent.srcEvent = evt;
@@ -142,17 +142,17 @@ class Interaction3 {
 
         iroot.addEventListener('mousemove', fireMove)
 
-        iroot.addEventListener('mousedown', (evt)=>{
+        iroot.addEventListener('mousedown', (evt) => {
             //if(evt.buttons==1)controls.enabled = false;
             dragStart.set(evt.x, evt.y)
-            let fireDrag = (evt)=>{
+            let fireDrag = (evt) => {
                 dragEvent.srcEvent = evt;
                 dragEnd.set(evt.x, evt.y)
                 dragEvent.buttons = evt.buttons;
                 document.dispatchEvent(dragEvent)
             }
             iroot.addEventListener('mousemove', fireDrag)
-            let el2 = (evt)=>{
+            let el2 = (evt) => {
                 //controls.enabled = false;
                 iroot.removeEventListener('mousemove', fireDrag)
                 iroot.removeEventListener('mouseup', el2)
@@ -165,7 +165,7 @@ class Interaction3 {
         let raycaster = this.raycaster = new THREE.Raycaster();
         raycaster.params.Line.threshold = .05;
         let castp = new THREE.Vector2()
-        this.raycastPixel = (pix,objects=scene.children)=>{
+        this.raycastPixel = (pix, objects = scene.children) => {
             let c = app.domElement;
             castp.set((pix.x / c.width) * 2 - 1., -(pix.y / c.height) * 2 + 1.)
             raycaster.setFromCamera(castp, camera);

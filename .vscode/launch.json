@@ -7,9 +7,10 @@
         {
             "type": "chrome",
             "request": "launch",
-            "name": "Launch Chrome against localhost",
-            "url": "http://136.24.178.125/fish/index.html",
-            "webRoot": "${workspaceFolder}"
+            "name": "Debug (Local Chrome)",
+            "url": "http://localhost:8080/index.html",
+            "webRoot": "${workspaceFolder}",
+            "preLaunchTask": "Start Dev Server"
         }
     ]
 }

@@ -2,7 +2,7 @@
 import CausticShader from "./CausticShader.js"
 
 let CAUSTICS = true;
-let HUE_SHIFT = true;
+let HUE_SHIFT = false;
 
 class FishShader {
     constructor(app) {
@@ -19,6 +19,7 @@ class FishShader {
         }
 
         let caustics = new CausticShader()
+        FishShader.caustics = caustics;
 
         FishShader.update = (time) => {
             FishShader.timeUniform.value = time
@@ -92,19 +93,13 @@ vec3 hueShift(vec3 color, float hue) {
                 if (CAUSTICS)
                     mat.fragmentShader = mat.fragmentShader.replace("#include <map_fragment>", `
 #include <map_fragment>
-//vUv
-vec4 caustic = texture2D(tCaustic,(uProjectionMatrix * vWorldPosition).xy*.1);
+vec4 caustic = texture2D(tCaustic,(uProjectionMatrix * vWorldPosition).xz*.1);
 
-diffuseColor.rgb = min(diffuseColor.rgb,caustic.rgb);
-//diffuseColor.rgb = diffuseColor.rgb+((caustic.rgb-.5)*.5);
+float heightFactor = smoothstep(-5.0, 40.0, vWorldPosition.y);
+float causticIntensity = mix(1., 1.1, heightFactor);
 
-
-
-//diffuseColor.rgb = mix(diffuseColor.rgb,caustic.rgb,.4);
-//diffuseColor.rgb = min(diffuseColor.rgb,caustic.rgb);
-//diffuseColor.rgb = diffuseColor.rgb*caustic.rgb;
-//diffuseColor.rgb = mix(diffuseColor.rgb*caustic.rgb,diffuseColor.rgb,.2);
-
+vec3 blendedCaustic = mix(vec3(1.0), caustic.rgb, causticIntensity);
+diffuseColor.rgb = min(diffuseColor.rgb, blendedCaustic);
 `);
 
                 if (HUE_SHIFT)

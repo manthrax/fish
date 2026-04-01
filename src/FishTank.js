@@ -1,11 +1,14 @@
 
 import CausticShader from "./CausticShader.js"
+import FishShader from "./FishShader.js"
 
 class FishTank {
     constructor(app) {
         let { THREE, App3 } = app;
+        this.THREE = THREE;
+        this.App3 = App3;
         let fogColor = `#57a5ed`//#050c0d`;//'#57a5edff
-        app.scene.fog = new THREE.Fog(fogColor, -150, 500);
+        app.scene.fog = new THREE.Fog(fogColor, 100, 600);
 
 
 
@@ -23,7 +26,8 @@ class FishTank {
             m.scale.multiplyScalar(10)
             // m.position.y-= 10;
             //  m.material.color.set('#101020')
-            m.material.color.set('#bcb188')          /// Sand color
+            this.duneMesh = m;
+            m.material.color.set(window.SimConfig.duneColor)          /// Sand color
             m.receiveShadow = true
             let visMesh = this.visMesh = new THREE.Mesh(new THREE.PlaneGeometry(500, 500, 100, 100), new THREE.MeshStandardMaterial({
                 side: THREE.DoubleSide,
@@ -39,7 +43,8 @@ class FishTank {
             visMesh.rotation.x = -Math.PI * .5
 
             new THREE.TextureLoader().load(`assets/background.jpg`, (tex) => {
-                //app.renderer.environment = tex;
+                tex.mapping = THREE.EquirectangularReflectionMapping;
+                app.scene.environment = tex;
                 //app.scene.background = tex;
 
 
@@ -80,8 +85,87 @@ class FishTank {
             app.scene.add(visMesh)
 
             app.renderer.setClearColor(fogColor)
-            app.scene.fog.color.set(fogColor)
+            App3.glbLoader.load(app.assetRoot + "assets/coral.glb", async (coralGltf) => {
+                let { LoopSubdivision } = await import("three-subdivide");
+                let BufferGeometryUtils = await import("three/addons/utils/BufferGeometryUtils.js");
+                let subdivParams = {
+                    split: false,
+                    uvSmooth: false,
+                    preserveEdges: false,
+                    flatOnly: false,
+                    maxTriangles: Infinity
+                };
 
+                this.coralTemplates = [];
+                let geometryCache = new Map();
+                let materialCache = new Map();
+
+                coralGltf.scene.traverse(e => {
+                    if (e.isMesh) {
+                        // Process identical geometries only once
+                        if (!geometryCache.has(e.geometry)) {
+                            /*
+                            let g = LoopSubdivision.modify(e.geometry, 1, subdivParams);
+                            g = BufferGeometryUtils.mergeVertices(g);
+                            g.computeVertexNormals();
+                            g.computeBoundingSphere();
+                            geometryCache.set(e.geometry, g);
+                        */
+                            geometryCache.set(e.geometry, e.geometry);
+                        }
+                        e.geometry = geometryCache.get(e.geometry);
+
+                        // Process identical materials only once
+                        let processMat = (m) => {
+                            if (!materialCache.has(m)) {
+                                let mClone = m.clone();
+                                this.applyCausticsToMaterial(mClone);
+                                materialCache.set(m, mClone);
+                            }
+                            return materialCache.get(m);
+                        };
+
+                        if (Array.isArray(e.material)) {
+                            e.material = e.material.map(processMat);
+                        } else {
+                            e.material = processMat(e.material);
+                        }
+
+                        this.coralTemplates.push(e);
+                    }
+                });
+
+                this.rebuildCorals = () => {
+                    if (!this.coralTemplates || this.coralTemplates.length === 0) return;
+
+                    if (this.coralGroup) app.scene.remove(this.coralGroup);
+                    this.coralGroup = new THREE.Group();
+                    app.scene.add(this.coralGroup);
+
+                    Math.random = Math.seededRandom(window.SimConfig.SEED + 100);
+                    let count = window.SimConfig.CORAL_COUNT;
+                    let scaleBase = window.SimConfig.CORAL_SCALE;
+                    let scaleVar = window.SimConfig.CORAL_SCALE_VAR;
+
+                    for (let i = 0; i < count; i++) {
+                        let coralTemplate = this.coralTemplates[Math.floor(Math.random() * this.coralTemplates.length)];
+                        let coral = coralTemplate.clone();
+
+                        let angle = Math.random() * Math.PI * 2;
+                        let dist = Math.random() * 125 + 15;
+                        coral.position.set(Math.cos(angle) * dist, -.5, Math.sin(angle) * dist);
+                        coral.rotation.y = Math.random() * Math.PI * 2;
+
+                        coral.scale.setScalar(Math.random() * scaleVar + scaleBase);
+                        coral.castShadow = true;
+                        coral.receiveShadow = true;
+                        this.coralGroup.add(coral);
+                        coral.updateMatrixWorld(true);
+                        coral.matrixAutoUpdate = coral.matrixWorldAutoUpdate = false;
+                    }
+                };
+                this.rebuildCorals();
+            });
 
             App3.loadPhaseComplete()
         })
@@ -90,6 +174,48 @@ class FishTank {
         //--------------------------
 
 
+    }
+
+    applyCausticsToMaterial(material) {
+        material.customProgramCacheKey = function () {
+            return "caustics_coral";
+        };
+        material.onBeforeCompile = (shader) => {
+            // Use the same shared texture as the fish and floors
+            shader.uniforms.tCaustic = FishShader.causticUniform;
+            shader.uniforms.uProjectionMatrix = { value: new this.THREE.Matrix4() };
+
+            shader.vertexShader = shader.vertexShader.replace("#include <common>", `
+#include <common>
+varying vec3 vCausticWorldPos;
+            `);
+
+            // Capture the world position after all transforms are applied
+            shader.vertexShader = shader.vertexShader.replace("#include <worldpos_vertex>", `
+#include <worldpos_vertex>
+vCausticWorldPos = (modelMatrix * vec4(transformed, 1.0)).xyz;
+            `);
+
+            shader.fragmentShader = shader.fragmentShader.replace("#include <common>", `
+#include <common>
+uniform sampler2D tCaustic;
+varying vec3 vCausticWorldPos;
+uniform mat4 uProjectionMatrix;
+            `);
+
+            // Use the recalculated factor (0.0125) to match the seafloor UVs/repeat exactly
+            shader.fragmentShader = shader.fragmentShader.replace("#include <map_fragment>", `
+#include <map_fragment>
+vec4 causticCol = texture2D(tCaustic, vCausticWorldPos.xz * 0.0125);
+// Height-based attenuation. Seafloor is around -5 to -10, surface is around 40-50.
+float heightFactor = smoothstep(-5.0, 40.0, vCausticWorldPos.y);
+float causticIntensity = mix(1., 1., heightFactor);
+
+// Mute the caustics at depth: fade towards white (no shadow effect) or fade the additive portion.
+vec3 blendedCaustic = mix(vec3(1.0), causticCol.rgb + 0.05, causticIntensity);
+diffuseColor.rgb = min(diffuseColor.rgb, blendedCaustic);
+            `);
+        };
     }
 }
 

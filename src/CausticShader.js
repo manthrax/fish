@@ -2,7 +2,16 @@ import *as THREE from "three"
 
 class CausticShader extends THREE.ShaderMaterial {
     constructor() {
-        super({ vertexShader: CausticShader.vertex, fragmentShader: CausticShader.header + CausticShader.fragment, uniforms: { iTime: { value: performance.now() / 1000. } } })
+        super({
+            vertexShader: CausticShader.vertex,
+            fragmentShader: CausticShader.header + CausticShader.fragment,
+            uniforms: {
+                iTime: { value: performance.now() / 1000. },
+                uBaseColor: { value: new THREE.Color(0.0, 0.35, 0.5) },
+                uSpeed: { value: .63 },
+                uScale: { value: 1.0 }
+            }
+        })
         let causticMesh = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2), this)
         causticMesh.position.z -= 10;
         const rtScene = new THREE.Scene();
@@ -53,6 +62,9 @@ CausticShader.header = `
 // Modified from David Hoskins (2013-07-07) and joltz0r (2013-07-04)
 varying vec2 vUv;
 uniform float iTime;
+uniform vec3 uBaseColor;
+uniform float uSpeed;
+uniform float uScale;
 
 #define TAU 6.28318530718
        
@@ -82,7 +94,7 @@ float waterHighlight(vec2 p, float time, float foaminess)
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord ) 
 {
-    float time = (iTime * 1.63)+123.0;
+    float time = (iTime * uSpeed)+123.0;
     vec2 uv = fragCoord.xy / iResolution.xy;
     vec2 uv_square = vec2(uv.x * iResolution.x / iResolution.y, uv.y);
     float dist_center = pow(2.0*length(uv - 0.5), 2.0);
@@ -90,15 +102,14 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     float foaminess = smoothstep(0.4, 1.8, 0.);//dist_center);
     float clearness = 0.1 + 0.9*smoothstep(0.1, 0.5, 1.);// dist_center);
 
-    vec2 p = mod(uv_square*TAU*TILING_FACTOR, TAU)-250.0;
+    vec2 p = mod(uv_square*TAU*(TILING_FACTOR * uScale), TAU)-250.0;
 
     float c = waterHighlight(p, time, foaminess);
 
-    vec3 water_color = vec3(0.0, 0.35, 0.5);
     vec3 color = vec3(c);
-    color = clamp(color + water_color, 0.0, 1.0);
+    color = clamp(color + uBaseColor, 0.0, 1.0);
 
-    color = mix(water_color, color, clearness);
+    color = mix(uBaseColor, color, clearness);
 
     fragColor = vec4(color, 1.0);
 }`

@@ -41,18 +41,40 @@ class FishSwarm {
 
         let fishShader = new FishShader(app)
 
-        App3.glbLoader.load(app.assetRoot + "assets/tropicalFeesh2.glb", (gltf) => {
-            //app.scene.add(gltf.scene)
+        App3.glbLoader.load(app.assetRoot + "assets/fish.glb", async (gltf) => {
+            let { LoopSubdivision } = await import("three-subdivide");
+            let BufferGeometryUtils = await import("three/addons/utils/BufferGeometryUtils.js");
+            let subdivParams = {
+                split: false,
+                uvSmooth: false,
+                preserveEdges: false,
+                flatOnly: false,
+                maxTriangles: Infinity
+            };
+
             let meshes = []
-            gltf.scene.traverse(e => e.isMesh && (e.name.indexOf("fh") == (FishParams.HIGH_RES_FISH ? 0 : -1)) && meshes.push(e))
+            gltf.scene.traverse(e => e.isMesh && meshes.push(e))
             gltf.scene.rotation.x = Math.PI * .5
             gltf.scene.updateMatrixWorld(true)
+            let geometryCache = new Map();
             meshes.forEach(m => {
                 scene.attach(m)
                 scene.remove(m)
                 m.scale.set(1, 1, 1)
                 m.rotation.set(0, 0, 0)
                 m.position.set(0, 0, 0)
+
+                // Uprez the geometry efficiently via caching
+                if (FishParams.HIGH_RES_FISH) {
+                    if (!geometryCache.has(m.geometry)) {
+                        let g = LoopSubdivision.modify(m.geometry, 1, subdivParams);
+                        g = BufferGeometryUtils.mergeVertices(g);
+                        g.computeVertexNormals();
+                        geometryCache.set(m.geometry, g);
+                    }
+                    m.geometry = geometryCache.get(m.geometry);
+                }
+
                 m.geometry.scale(.3, .3, .3)
                 m.geometry.rotateZ(Math.PI * .5)
                 m.geometry.rotateX(Math.PI * .5)
@@ -65,22 +87,43 @@ class FishSwarm {
                 m.customDepthMaterial = m.material.clone()
 
                 FishShader.makeFishMaterial(m.material)
+                FishShader.makeFishMaterial(m.customDepthMaterial)
             }
             )
-            meshes = meshes.sort((a, b) => a.name.localeCompare(b.name))
-            for (let i = 0; i < FishParams.NUM_FISH; i++) {
-                let id = rnd(meshes.length) | 0
-                let f = meshes[id].clone()
-                f.userData.type = id;
-                //let f = arnd(meshes).clone()
-                let s = FishSchools.getSchool(id, app)
-                f.swarm = s
+            //console.log(meshes.map(m=>m.name))
+            meshes.forEach(m => m.nameKey = parseInt(m.name.slice(2)));
+            meshes = meshes.filter(m => m.nameKey !== undefined);
+            meshes = meshes.sort((a, b) => a.nameKey - b.nameKey);
+            console.log(meshes.map(m => m.nameKey))
+            this.meshes = meshes;
 
-                spawn(f)
+            this.rebuildFish = () => {
+                if (this.igroup) scene.remove(this.igroup);
+                this.igroup = new InstanceGroup();
+                scene.add(this.igroup);
+                this.fishList = [];
+
+                Math.random = Math.seededRandom(window.SimConfig.SEED + 200);
+
+                for (let i = 0; i < FishParams.NUM_FISH; i++) {
+                    let id = rnd(this.meshes.length) | 0
+                    let f = this.meshes[id].clone()
+                    f.userData.type = id;
+                    let s = FishSchools.getSchool(id, app)
+                    f.swarm = s
+
+                    spawn(f)
+                }
+                let imc = this.igroup.instanceMeshCache;
+                for (let k in imc) {
+                    imc[k].mesh.castShadow = true;
+                    imc[k].mesh.receiveShadow = true;
+                    FishShader.makeFishMaterial(imc[k].mesh.material);
+                }
             }
-            let imc = igroup.instanceMeshCache;
-            for (let k in imc)
-                FishShader.makeFishMaterial(imc[k].mesh.material);
+
+            this.rebuildFish();
+
             App3.loadPhaseComplete()
         }
         )
@@ -140,14 +183,14 @@ class FishSwarm {
             this.fishList.push(fish)
             int2v3((Math.random() * 0x1000000) | 0, fish.userData.state.current)
             fish.userData.state.current.y = .5;
-            igroup.add(fish);
+            this.igroup.add(fish);
             fish.setInstanceColor(fish.userData.state.current)
         }
         let updateOneFish = (f) => {
             //    let b = f.userData.behavior;
 
             let state = f.userData.state;
-            let speed = (state.current.z + .5) * state.size * .001
+            let speed = (state.current.z + .5) * state.size * .001 * (FishParams.fishSpeedMult || 1.0);
 
 
 
@@ -157,9 +200,12 @@ class FishSwarm {
             tv1.copy(f.swarm.averageCenter).sub(f.position);
 
             let attraction = 0;
-            if (tv1.lengthSq() > (16 ** 2))
+            let lsq = tv1.lengthSq()
+            if (lsq > (50 ** 2)) {
                 attraction = 1;
-            else if (tv1.lengthSq() < (8 ** 2)) attraction = -1
+                if (lsq > (100 ** 2))
+                    f.position.randomDirection().multiplyScalar(10);
+            } else if (lsq < (30 ** 2)) attraction = -1
 
             //Clamp fish to ocean floor
             f.position.y = min(FishParams.oceanSurfaceY, max(FishParams.oceanFloorY + 1.5, f.position.y));
@@ -206,21 +252,25 @@ class FishSwarm {
 
         }
         this.updateFish = (e) => {
-            time = e.time
-            deltaT = e.deltaT * 1;
-            let base = (this.fishList.length * Math.random()) | 0
+            let ticks = window.SimConfig.TICK_RATE || 1;
+            let subDeltaT = e.deltaT;// / ticks;
 
-            FishShader.update(time)
+            for (let t = 0; t < ticks; t++) {
+                let subTime = e.time - e.deltaT + (subDeltaT * (t + 1));
+                time = subTime;
+                deltaT = subDeltaT;
 
-            FishSchools.beginUpdate(time);
+                FishShader.update(time);
+                FishSchools.beginUpdate(time);
 
-            if (FishParams.UPDATE_FISH)
-                this.fishList.forEach(updateOneFish)
+                if (FishParams.UPDATE_FISH) {
+                    this.fishList.forEach(updateOneFish);
+                }
 
-            mixers.forEach(m => {
-                m.update(e.deltaT * .001);
-                let f = m.getRoot();
-            })
+                mixers.forEach(m => {
+                    m.update(subDeltaT * .001);
+                });
+            }
         }
         document.addEventListener('frame', this.updateFish)
         App3.loadPhaseComplete()
