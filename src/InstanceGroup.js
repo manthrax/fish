@@ -1,8 +1,8 @@
-import*as THREE from "three"
+import *as THREE from "three"
 
 class InstanceCache {
     constructor(geometry, material, startingCount) {
-        const mesh = (this.mesh = new THREE.InstancedMesh(geometry.clone(),material.clone(),startingCount));
+        const mesh = (this.mesh = new THREE.InstancedMesh(geometry.clone(), material.clone(), startingCount));
         mesh.frustumCulled = false;
         mesh.userData.max = startingCount;
         mesh.count = 0;
@@ -11,7 +11,7 @@ class InstanceCache {
         let m = new Float32Array(startingCount * 3)
         for (let i = 0; i < m.length; i++)
             m[i] = Math.random()
-        mesh.instanceColors = new THREE.InstancedBufferAttribute(m,3)
+        mesh.instanceColors = new THREE.InstancedBufferAttribute(m, 3)
         mesh.geometry.setAttribute('color', mesh.instanceColors);
         mesh.material.vertexColors = true;
         //mesh.castShadow = mesh.receiveShadow = true;
@@ -19,7 +19,7 @@ class InstanceCache {
     alloc() {
         let mesh = this.mesh;
         if (mesh.count == mesh.userData.max) {
-            let nmesh = new THREE.InstancedMesh(mesh.geometry,mesh.material,mesh.count * 2);
+            let nmesh = new THREE.InstancedMesh(mesh.geometry, mesh.material, mesh.count * 2);
             mesh.frustumCulled = false;
             nmesh.copy(mesh);
             nmesh.userData.max = mesh.userData.max *= 2;
@@ -31,9 +31,9 @@ class InstanceCache {
 
             if (mesh.material.vertexColors) {
                 let m = new Float32Array(mesh.instanceColors.array.length * 2);
-                nmesh.instanceColors = new THREE.InstancedBufferAttribute(m,3)
+                nmesh.instanceColors = new THREE.InstancedBufferAttribute(m, 3)
                 nmesh.geometry.setAttribute('color', mesh.instanceColors);
-                for (let i = m.length; i; )
+                for (let i = m.length; i;)
                     m[--i] = Math.random()
                 nmesh.instanceColors.array.set(mesh.instanceColors.array);
             }
@@ -66,12 +66,13 @@ class InstanceGroup extends THREE.Object3D {
         let k = "";
         let root = this;
         //debugger
-        object.traverse(e=>{
+        object.traverse(e => {
             if (e.isMesh) {
                 k += e.geometry.uuid;
                 let im = this.instanceMeshCache[k];
                 if (!im) {
-                    im = this.instanceMeshCache[k] = new InstanceCache(e.geometry.clone(),e.material.clone(),4096);
+                    im = this.instanceMeshCache[k] = new InstanceCache(e.geometry.clone(), e.material.clone(), 4096);
+                    im.mesh.customDepthMaterial = e.customDepthMaterial;
                     this.instanceMeshRoot.add(im.mesh);
                     im.mesh.material.vertexColor = true;
                     im.mesh.castShadow = e.castShadow
@@ -81,11 +82,11 @@ class InstanceGroup extends THREE.Object3D {
                 object.updateMatrixWorld();
                 object.instancedMesh = im;
                 //im.mesh.setMatrixAt(object.userData.instanceIndex, object.matrix);
-                object.updateInstanceMatrix = function() {
+                object.updateInstanceMatrix = function () {
                     this.instancedMesh.mesh.setMatrixAt(this.userData.instanceIndex, this.matrixWorld);
                     this.instancedMesh.mesh.instanceMatrix.needsUpdate = true;
                 }
-                object.setInstanceColor = function(cr) {
+                object.setInstanceColor = function (cr) {
                     let id = this.userData.instanceIndex * 3;
                     let ca = this.instancedMesh.mesh.instanceColors.array
                     if (typeof cr === 'number') {
@@ -114,4 +115,4 @@ class InstanceGroup extends THREE.Object3D {
     }
 }
 
-export {InstanceGroup, InstanceCache};
+export { InstanceGroup, InstanceCache };

@@ -107,7 +107,9 @@ class FishSwarm {
 
                 for (let i = 0; i < FishParams.NUM_FISH; i++) {
                     let id = rnd(this.meshes.length) | 0
-                    let f = this.meshes[id].clone()
+                    let m = this.meshes[id];
+                    let f = m.clone()
+                    //f.customDepthMaterial = m.customDepthMaterial;
                     f.userData.type = id;
                     let s = FishSchools.getSchool(id, app)
                     f.swarm = s
@@ -118,7 +120,9 @@ class FishSwarm {
                 for (let k in imc) {
                     imc[k].mesh.castShadow = true;
                     imc[k].mesh.receiveShadow = true;
+                    //imc[k].mesh.customDepthMaterial = imc[k].mesh.material.clone()
                     FishShader.makeFishMaterial(imc[k].mesh.material);
+                    //FishShader.makeFishMaterial(imc[k].mesh.customDepthMaterial)
                 }
             }
 
