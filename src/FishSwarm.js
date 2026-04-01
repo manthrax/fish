@@ -204,14 +204,17 @@ class FishSwarm {
             if (lsq > (50 ** 2)) {
                 attraction = 2; //try to recenter
                 if (lsq > (80 ** 2)) {
-                    //f.position.setLength(100);//randomDirection().multiplyScalar(10);
                     state.steering.y = 2;
-                    attraction = 4; //try to recenter
+                    attraction = 4; //try to recenter harder
                 }
-            } else if (lsq < (30 ** 2)) attraction = -1
+            } else if (lsq < (30 ** 2)) attraction = -1 //chill out
 
             //Clamp fish to ocean floor
+            let py = f.position.y;
             f.position.y = min(FishParams.oceanSurfaceY, max(FishParams.oceanFloorY + 1.5, f.position.y));
+            if (py != f.position.y) {
+                state.steering.x = 2;
+            }
             if (attraction) {
                 tv1.normalize().multiplyScalar((.00001 + (.00001 * state.normalAge) * attraction) * deltaT)
                 state.velocity.add(tv1)
@@ -239,6 +242,7 @@ class FishSwarm {
                 int2v3((Math.random() * 0x1000000) | 0, tv0)
 
                 state.end.set(tv0.x, .5 + srnd((1 - state.normalAge) * .1), tv0.z)
+
             }
             if (time < state.fadeEndTime) {
                 let prog = (time - state.fadeStartTime) / state.fadeDuration

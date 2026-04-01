@@ -165,6 +165,8 @@ class FishTank {
                     }
                 };
                 this.rebuildCorals();
+
+
             });
 
             App3.loadPhaseComplete()
