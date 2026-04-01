@@ -58,6 +58,21 @@ export default class App3 {
             lastTime = time;
             document.dispatchEvent(frameEvt)
             controls.update();
+
+            let maxRad = 130;
+            if (controls.target.length() > maxRad)
+                controls.target.setLength(maxRad);
+
+            controls.target.sub(camera.position);
+            if (camera.position.y < 2)
+                camera.position.y = 2;
+            else if (camera.position.y > 49)
+                camera.position.y = 49;
+
+            if (camera.position.length() > maxRad)
+                camera.position.setLength(maxRad);
+            if (controls.target.length() < 10) controls.target.setLength(10)
+            controls.target.add(camera.position);
             renderer.render(scene, camera)
         }
 

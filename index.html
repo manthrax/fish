@@ -171,7 +171,7 @@
 
         // Simulation Config
         let simFolder = app.gui.addFolder('Simulation Config');
-        
+
         window.SimConfig.FPS = 0;
         let fpsController = simFolder.add(window.SimConfig, 'FPS').name('FPS').disable();
         let frameCount = 0;
@@ -197,7 +197,7 @@
         });
 
         simFolder.add(window.SimConfig, 'SEED', 0, 1000000, 1).name('Seed').onFinishChange(applyRebuild);
-        simFolder.add(window.SimConfig, 'NUM_FISH', 10, 5000, 10).name('Fish Count').onFinishChange((v) => {
+        simFolder.add(window.SimConfig, 'NUM_FISH', 10, 200000, 10).name('Fish Count').onFinishChange((v) => {
             if (FishParams) FishParams.NUM_FISH = v;
             applyRebuild();
         });
@@ -220,7 +220,7 @@
         //aboutFolder.add(aboutData, 'corals').name('Models').disable();
         aboutFolder.add({ link: () => window.open("https://github.com/manthrax/fish", '_blank') }, 'link').name(aboutData.app);
         aboutFolder.add({ link: () => window.open("https://sketchfab.com/Kanna-Nakajima", '_blank') }, 'link').name(aboutData.corals);
-    
+
         // Reset Button
         app.gui.add({
             reset: () => {
