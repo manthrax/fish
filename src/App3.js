@@ -106,7 +106,7 @@ App3.loadPhaseComplete = (count = 1) => {
         let app = App3.getApp()
         let fadeEvt = new Event('fadeIn')
         app.dispatchEvent(fadeEvt)
-        let m = App3.fadePlane = new THREE.Mesh(new THREE.PlaneGeometry(3, 3), new THREE.MeshBasicMaterial({
+        let m = App3.fadePlane = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), new THREE.MeshBasicMaterial({
             color: 'black',
             side: THREE.DoubleSide,
             transparent: true,
