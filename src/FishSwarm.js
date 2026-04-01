@@ -202,9 +202,12 @@ class FishSwarm {
             let attraction = 0;
             let lsq = tv1.lengthSq()
             if (lsq > (50 ** 2)) {
-                attraction = 1;
-                if (lsq > (100 ** 2))
-                    f.position.randomDirection().multiplyScalar(10);
+                attraction = 2; //try to recenter
+                if (lsq > (80 ** 2)) {
+                    //f.position.setLength(100);//randomDirection().multiplyScalar(10);
+                    state.steering.y = 2;
+                    attraction = 4; //try to recenter
+                }
             } else if (lsq < (30 ** 2)) attraction = -1
 
             //Clamp fish to ocean floor
