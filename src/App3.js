@@ -11,7 +11,8 @@ export default class App3 {
 
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFShadowMap;
-
+        renderer.toneMapping = THREE.NeutralToneMapping;
+        renderer.toneMappingExposure = 1;
         var gl = renderer.getContext();
         var debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
         try {
